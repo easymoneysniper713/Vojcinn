@@ -1,172 +1,35 @@
 Dokumentace projektu: Dungeon Quest
+
 Popis a cíl projektu:
-
-Tato aplikace je textová RPG hra, ve které hráč prochází dungeonem, bojuje s nepřáteli, sbírá zlato a získává zkušenosti. Cílem projektu je vytvořit jednoduchou hru v konzoli, která simuluje základní herní mechaniky jako souboj, levelování a správu inventáře.
-
-Hlavním cílem hráče je přežít co nejdéle, porazit co nejvíce nepřátel a dosáhnout co nejvyšší úrovně.
+Tato aplikace je textová RPG hra, ve které hráč prochází dungeonem, bojuje s nepřáteli, sbírá zlato a získává zkušenosti. Cílem projektu je vytvořit jednoduchou hru v konzoli, která simuluje základní herní mechaniky jako souboj, levelování a správu inventáře. Hlavním cílem hráče je přežít co nejdéle, porazit co nejvíce nepřátel a dosáhnout co nejvyšší úrovně.
 
 Jak program používat:
-Spuštění:
+Spuštění: Po spuštění programu se zobrazí úvodní obrazovka a výzva k zadání jména postavy.
 
-Po spuštění programu se zobrazí úvodní obrazovka a výzva k zadání jména postavy.
+Průběh hry: Hráč se postupně přesouvá mezi náhodnými místnostmi. V každé místnosti může nastat souboj s nepřítelem, setkání s obchodníkem, nalezení zlata nebo odpočinek.
 
-Průběh hry:
+Ovládání: V boji hráč volí akce pomocí čísel. 1 znamená útok, 2 použití lektvaru a 3 pokus o útěk.
 
-Hráč se postupně přesouvá mezi náhodnými místnostmi.
+Inventář: Hráč může používat lektvary pro doplnění zdraví.
 
-V každé místnosti může nastat:
+Obchod: Hráč může nakupovat zbraně a lektvary za získané zlato.
 
-souboj s nepřítelem
-
-setkání s obchodníkem
-
-nalezení zlata
-
-odpočinek (doplnění životů)
-
-Ovládání v boji:
-
-1 – útok
-
-2 – použití lektvaru
-
-3 – pokus o útěk
-
-Inventář:
-
-Hráč může používat lektvary pro doplnění zdraví.
-
-Obchod:
-
-Hráč může nakupovat:
-
-nové zbraně
-
-lektvary
-
-Ukončení hry:
-
-hráč zemře
-
-nebo zadá q pro ukončení hry
+Ukončení: Hra končí smrtí hráče nebo zadáním „q“ pro ukončení.
 
 Funkcionalita programu:
-
-Aplikace běží v cyklu (herní smyčce), dokud hráč:
-
-nezemře
-
-nebo hru neukončí
-
-Program využívá:
-
-náhodné generování událostí
-
-správu stavu hráče (HP, XP, level, inventář)
-
-interakci s uživatelem pomocí vstupů
-
-Každý průchod smyčkou představuje jednu herní „místnost“.
+Aplikace běží v herní smyčce, dokud hráč nezemře nebo hru neukončí. Každý průchod smyčkou představuje jednu místnost. Program využívá náhodné generování událostí a spravuje stav hráče (životy, zkušenosti, level, inventář, zlato).
 
 Technická část:
-Algoritmus souboje:
+Algoritmus souboje: Program používá cyklus, ve kterém se střídají tahy hráče a nepřítele. Poškození je generováno náhodně v určitém rozsahu. Kritický zásah může poškození zdvojnásobit.
 
-Souboj probíhá ve smyčce:
+Levelovací systém: Hráč získává zkušenosti (XP) za poražené nepřátele. Po dosažení určité hodnoty XP postoupí na vyšší úroveň, zvýší se jeho maximální počet životů a částečně se vyléčí.
 
-hráč provede akci
+Logické větvení: Program využívá podmínky if, elif a else pro řízení průběhu hry, například při výběru akce hráče, kontrole smrti, nákupu v obchodě nebo generování událostí.
 
-nepřítel následně zaútočí
+Náhodnost: Program využívá knihovnu random pro výběr nepřátel, místností, výpočet poškození, šanci na kritický zásah a úspěšnost útěku.
 
-opakuje se, dokud jedna strana nezemře
+Datové struktury: Program pracuje se slovníky (dict) pro ukládání zbraní a lektvarů, se seznamy (list) pro nepřátele a místnosti a s třídou Player pro uchování informací o hráči.
 
-Poškození je generováno náhodně v daném rozsahu.
+Vstupy a výstupy: Program používá funkci input() pro získání vstupu od uživatele a print() pro výpis informací. Pro přehlednější výpis jsou použity formátované řetězce (f-strings). Funkce slow_print() zajišťuje postupné zobrazování textu.
 
-Levelovací systém:
-
-hráč získává XP za poražené nepřátele
-
-po dosažení určité hodnoty XP se zvýší level
-
-při levelování:
-
-se zvýší maximální HP
-
-hráč se částečně vyléčí
-
-Logické větvení:
-
-Program využívá podmínky (if, elif, else) pro:
-
-výběr akce hráče
-
-náhodné události (boj, obchod, odpočinek…)
-
-kontrolu smrti hráče
-
-kontrolu dostatku zlata při nákupu
-
-Náhodnost:
-
-Program využívá knihovnu random:
-
-výběr nepřátel
-
-výběr místností
-
-výpočet poškození
-
-šance na kritický zásah
-
-šance na útěk
-
-Datové struktury:
-
-Program využívá:
-
-slovníky (dict)
-
-zbraně (WEAPONS)
-
-lektvary (POTIONS)
-
-seznamy (list)
-
-nepřátelé (ENEMIES)
-
-místnosti (ROOMS)
-
-třídu (class Player)
-
-uchovává všechny informace o hráči
-
-Vstupy a výstupy:
-
-vstup: funkce input()
-
-výstup: print() a formátované řetězce (f-strings)
-
-funkce slow_print() zajišťuje postupné vypisování textu pro lepší herní zážitek
-
-Ošetření chyb:
-
-Program kontroluje:
-
-neplatné vstupy (např. špatná volba akce)
-
-nedostatek lektvarů
-
-nedostatek zlata při nákupu
-
-Při neplatném vstupu hráč ztrácí tah.
-
-Závěr:
-
-Projekt ukazuje základní principy tvorby her v Pythonu:
-
-práce s cykly a podmínkami
-
-objektově orientované programování
-
-práce s náhodností
-
-interakce s uživatelem
+Ošetření chyb: Program kontroluje neplatné vstupy uživatele, nedostatek lektvarů a nedostatek zlata. Při neplatné volbě hráč ztrácí tah.
