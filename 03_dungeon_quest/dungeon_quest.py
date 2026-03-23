@@ -1,6 +1,7 @@
 import random
 import time
 import os
+import msvcrt
  
  
 def clear():
@@ -21,30 +22,41 @@ def slow_print(text: str, delay: float = 0.03):
 WEAPONS = {
     "dřevěný meč":  {"damage": (3, 7),  "crit": 0.05},
     "železný meč":  {"damage": (6, 12), "crit": 0.10},
-    "válečná sekera": {"damage": (8, 15), "crit": 0.15},
-    "kouzelná hůl": {"damage": (10, 20), "crit": 0.25},
+    "bojová sekera": {"damage": (8, 15), "crit": 0.15},
+    "kouzelná hůlka": {"damage": (10, 20), "crit": 0.25},
+    "Michalova dýka": {"damage": (25, 25), "crit": 0.30},
 }
  
 ENEMIES = [
     {"name": "Goblin",      "hp": 15, "damage": (2, 6),  "xp": 10, "gold": (2, 8)},
-    {"name": "Skelet",      "hp": 20, "damage": (3, 8),  "xp": 15, "gold": (3, 10)},
+    {"name": "Kostlivec",      "hp": 20, "damage": (3, 8),  "xp": 15, "gold": (3, 10)},
     {"name": "Troll",       "hp": 35, "damage": (5, 12), "xp": 30, "gold": (8, 18)},
     {"name": "Drak",        "hp": 60, "damage": (10, 20),"xp": 80, "gold": (20, 50)},
     {"name": "Temný rytíř", "hp": 45, "damage": (7, 15), "xp": 50, "gold": (12, 25)},
+    {"name": "Michalův hněv", "hp": 100,"damage": (15, 30),"xp": 150,"gold": (50, 100)},
 ]
  
 ROOMS = [
-    "temná chodba",
-    "zaprášená síň",
+    "tmavá chodba",
+    "zaprášená hala",
     "klenutý sklep",
-    "hrobka předků",
+    "předkovský hrob",
     "dračí doupě",
-    "magická komnata",
+    "kouzelná komnata",
     "pokladnice",
     "zapomenutá kaple",
+    
 ]
  
 POTIONS = {"malý lektvar": 20, "velký lektvar": 40, "eliksír života": 70}
+ 
+QUOTES = [
+    "  💭 'Čas je peníze.' - Benjamin Franklin",
+    "  💭 'Život je to, co se vám stane, zatímco si děláte jiné plány.' - John Lennon",
+    "  💭 'Buď změnou, kterou chceš vidět ve světě.' - Mahatma Gandhi",
+    "  💭 'Štěstí není cíl, ale způsob života.' - Albert Camus",
+    "  💭 'Nejlepší způsob, jak předpovědět budoucnost, je ji vytvořit.' - Peter Drucker",
+]
  
  
 # ---------------------------------------------------------------------------
@@ -125,7 +137,7 @@ def battle(player: Player, enemy_template: dict) -> bool:
  
     while player.hp > 0 and enemy["hp"] > 0:
         print(f"\n  Ty: {player.hp} HP  |  {enemy['name']}: {enemy['hp']} HP")
-        print("  [1] Útok  [2] Lektvar  [3] Útěk")
+        print("  [1] Útok  [2] Lektvar  [3] Útěk [4] Obchod [5] nečinnost")
         action = input("  > ").strip()
  
         if action == "1":
@@ -142,7 +154,27 @@ def battle(player: Player, enemy_template: dict) -> bool:
                 slow_print("  🏃 Podařilo se ti utéct!")
                 return False
             slow_print("  Útěk se nezdařil!")
- 
+        
+        elif action == "4":
+            shop(player)
+        
+        elif action == "5":
+            slow_print("  Vstupuješ do AFK režimu...")
+            print("  AFK režim. stiskni '1' pro návrat do hry.")
+            last_quote = time.time()
+            while True:
+                if msvcrt.kbhit():
+                    key = msvcrt.getch().decode('utf-8')
+                    if key == '1':
+                        slow_print("  Vrátil ses do hry!")
+                        break
+                current = time.time()
+                if current - last_quote >= 30:
+                    quote = random.choice(QUOTES)
+                    print(quote)
+                    last_quote = current
+                time.sleep(0.1)
+        
         else:
             slow_print("  Neplatná volba, přišel jsi o tah!")
  
@@ -187,7 +219,7 @@ def shop(player: Player):
         return
     kind, name, price, _ = options[int(choice) - 1]
     if player.gold < price:
-        slow_print("  Nemáš dost zlatých!")
+        slow_print("  Nemáš dost zlatých mincí!")
         return
     player.gold -= price
     if kind == "weapon":
@@ -228,7 +260,7 @@ def main():
             slow_print("\n🏪 Narazil jsi na obchodníka!")
             shop(player)
         elif roll < 0.85:
-            gold = random.randint(5, 20)
+            gold = random.randint(10, 30)
             player.gold += gold
             slow_print(f"\n💰 Našel jsi {gold} zlatých na zemi!")
         else:
