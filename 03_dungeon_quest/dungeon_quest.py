@@ -28,12 +28,12 @@ WEAPONS = {
 }
  
 ENEMIES = [
-    {"name": "Goblin",      "hp": 15, "damage": (2, 6),  "xp": 10, "gold": (2, 8)},
+    {"name": "Goblin",         "hp": 15, "damage": (2, 6),  "xp": 10, "gold": (2, 8)},
     {"name": "Kostlivec",      "hp": 20, "damage": (3, 8),  "xp": 15, "gold": (3, 10)},
-    {"name": "Troll",       "hp": 35, "damage": (5, 12), "xp": 30, "gold": (8, 18)},
-    {"name": "Drak",        "hp": 60, "damage": (10, 20),"xp": 80, "gold": (20, 50)},
-    {"name": "Temný rytíř", "hp": 45, "damage": (7, 15), "xp": 50, "gold": (12, 25)},
-    {"name": "Michalův hněv", "hp": 100,"damage": (15, 30),"xp": 150,"gold": (50, 100)},
+    {"name": "Troll",          "hp": 35, "damage": (5, 12), "xp": 30, "gold": (8, 18)},
+    {"name": "Drak",           "hp": 60, "damage": (10, 20),"xp": 80, "gold": (20, 50)},
+    {"name": "Temný rytíř",    "hp": 45, "damage": (7, 15), "xp": 50, "gold": (12, 25)},
+    {"name": "Michalův hněv",  "hp": 100,"damage": (15, 30),"xp": 150,"gold": (50, 100)},
 ]
  
 ROOMS = [
