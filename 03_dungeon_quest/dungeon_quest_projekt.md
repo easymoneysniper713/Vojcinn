@@ -33,3 +33,15 @@ Datové struktury: Program pracuje se slovníky (dict) pro ukládání zbraní a
 Vstupy a výstupy: Program používá funkci input() pro získání vstupu od uživatele a print() pro výpis informací. Pro přehlednější výpis jsou použity formátované řetězce (f-strings). Funkce slow_print() zajišťuje postupné zobrazování textu.
 
 Ošetření chyb: Program kontroluje neplatné vstupy uživatele, nedostatek lektvarů a nedostatek zlata. Při neplatné volbě hráč ztrácí tah.
+
+Požadavky:
+- Python 3.x (doporučeno 3.8 nebo vyšší)
+- Žádné externí knihovny nejsou potřeba (používají se pouze standardní knihovny: random, time, os, msvcrt)
+
+Instalace:
+1. Stáhněte nebo naklonujte repozitář.
+2. Ujistěte se, že máte nainstalovaný Python.
+3. Spusťte program příkazem: python dungeon_quest.py
+
+Changelog (Patch Notes):
+- **Verze 1.1** (23. března 2026): Přeloženy všechny řetězce do češtiny pro úplnou lokalizaci. Opraveny nekonzistence v názvech zbraní, nepřátel a místností.
