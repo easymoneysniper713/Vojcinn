@@ -2,7 +2,7 @@ import random
 import time
 import os
 import msvcrt
- 
+
  
 def clear():
     os.system("cls" if os.name == "nt" else "clear")
@@ -19,6 +19,12 @@ def slow_print(text: str, delay: float = 0.03):
 # Datové struktury
 # ---------------------------------------------------------------------------
  
+ARMORS = {
+    "kožená zbroj": 2,
+    "železná zbroj": 4,
+    "rytířská zbroj": 6,
+}
+
 WEAPONS = {
     "dřevěný meč":  {"damage": (3, 7),  "crit": 0.05},
     "železný meč":  {"damage": (6, 12), "crit": 0.10},
@@ -75,6 +81,7 @@ class Player:
         self.inventory: dict[str, int] = {"malý lektvar": 2}
         self.kills = 0
         self.rooms_visited = 0
+        self.armor = "kožená zbroj"
  
     def xp_to_next(self) -> int:
         return self.level * 50
@@ -96,7 +103,8 @@ class Player:
         if crit:
             dmg = int(dmg * 2)
         return dmg, crit
- 
+
+    
     def use_potion(self) -> bool:
         available = {k: v for k, v in self.inventory.items() if v > 0}
         if not available:
@@ -126,11 +134,16 @@ class Player:
         inv = ", ".join(f"{k}×{v}" for k, v in self.inventory.items() if v > 0)
         print(f"  🎒 {inv or 'prázdné'}")
  
+    def take_damage(self, dmg: int):
+        defense = ARMORS[self.armor]
+        real_dmg = max(1, dmg - defense)
+        self.hp -= real_dmg
+        return real_dmg
+ 
  
 # ---------------------------------------------------------------------------
 # Boj
 # ---------------------------------------------------------------------------
- 
 def battle(player: Player, enemy_template: dict) -> bool:
     enemy = dict(enemy_template)
     slow_print(f"\n⚔️  Narazil jsi na {enemy['name']}! (HP: {enemy['hp']})")
@@ -139,7 +152,14 @@ def battle(player: Player, enemy_template: dict) -> bool:
         print(f"\n  Ty: {player.hp} HP  |  {enemy['name']}: {enemy['hp']} HP")
         print("  [1] Útok  [2] Lektvar  [3] Útěk [4] Obchod [5] nečinnost")
         action = input("  > ").strip()
- 
+        
+        # brnění útok nepřítele před akcí hráče
+        if enemy["hp"] > 0:
+            e_dmg = random.randint(*enemy["damage"])
+            real = player.take_damage(e_dmg)
+            slow_print(f"  {enemy['name']} tě zasáhl za {real} poškození!")
+        
+        # Kritický zásah a útok hráče
         if action == "1":
             dmg, crit = player.attack()
             enemy["hp"] -= dmg
@@ -159,21 +179,13 @@ def battle(player: Player, enemy_template: dict) -> bool:
             shop(player)
         
         elif action == "5":
-            slow_print("  Vstupuješ do AFK režimu...")
-            print("  AFK režim. stiskni '1' pro návrat do hry.")
-            last_quote = time.time()
+            slow_print("  Vstoupil jsi do AFK režimu...")
             while True:
-                if msvcrt.kbhit():
-                    key = msvcrt.getch().decode('utf-8')
-                    if key == '1':
-                        slow_print("  Vrátil ses do hry!")
-                        break
-                current = time.time()
-                if current - last_quote >= 30:
-                    quote = random.choice(QUOTES)
-                    print(quote)
-                    last_quote = current
-                time.sleep(0.1)
+                print(random.choice(QUOTES))
+                cmd = input("  Napiš 1 pro návrat do hry, Enter pro další quote: ").strip()
+                if cmd == "1":
+                    slow_print("  Vrátil ses do hry!")
+                    break
         
         else:
             slow_print("  Neplatná volba, přišel jsi o tah!")

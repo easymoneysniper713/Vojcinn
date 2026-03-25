@@ -45,3 +45,4 @@ Instalace:
 
 Changelog (Patch Notes):
 - **Verze 1.1** (23. března 2026): Přeloženy všechny řetězce do češtiny pro úplnou lokalizaci. Opraveny nekonzistence v názvech zbraní, nepřátel a místností.
+- **Verze 1.2** (25. března 2026): Přidána nová funkce brňení
