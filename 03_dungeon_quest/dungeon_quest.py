@@ -18,7 +18,9 @@ def slow_print(text: str, delay: float = 0.03):
 # ---------------------------------------------------------------------------
 # Datové struktury
 # ---------------------------------------------------------------------------
- 
+
+
+
 ARMORS = {
     "kožená zbroj": 2,
     "železná zbroj": 4,
@@ -64,7 +66,14 @@ QUOTES = [
     "  💭 'Nejlepší způsob, jak předpovědět budoucnost, je ji vytvořit.' - Peter Drucker",
 ]
  
- 
+
+QUESTS = [
+    {"type": "kill", "target": "Goblin", "amount": 3, "reward_xp": 30, "reward_gold": 20},
+    {"type": "kill", "target": "Troll", "amount": 2, "reward_xp": 50, "reward_gold": 40},
+    {"type": "rooms", "amount": 5, "reward_xp": 25, "reward_gold": 15},
+    {"type": "gold", "amount": 100, "reward_xp": 40, "reward_gold": 0},
+]
+
 # ---------------------------------------------------------------------------
 # Hráč
 # ---------------------------------------------------------------------------
@@ -82,6 +91,9 @@ class Player:
         self.kills = 0
         self.rooms_visited = 0
         self.armor = "kožená zbroj"
+        self.rooms_visited = 0
+        self.quest = None
+        self.quest_progress = 0
  
     def xp_to_next(self) -> int:
         return self.level * 50
@@ -133,14 +145,21 @@ class Player:
         print(f"  ⚔️  {self.weapon}  |  💰 {self.gold} zlatých")
         inv = ", ".join(f"{k}×{v}" for k, v in self.inventory.items() if v > 0)
         print(f"  🎒 {inv or 'prázdné'}")
+        if self.quest:
+          if self.quest["type"] == "kill":
+            print(f"  📜 Zabij {self.quest_progress}/{self.quest['amount']} {self.quest['target']}")         
+          elif self.quest["type"] == "rooms":
+            print(f"  📜 Navštiv {self.quest_progress}/{self.quest['amount']} místností")
+        elif self.quest["type"] == "gold":
+          print(f"  📜 Získej {self.quest_progress}/{self.quest['amount']} zlata")
  
     def take_damage(self, dmg: int):
         defense = ARMORS[self.armor]
         real_dmg = max(1, dmg - defense)
         self.hp -= real_dmg
         return real_dmg
- 
- 
+    
+   
 # ---------------------------------------------------------------------------
 # Boj
 # ---------------------------------------------------------------------------
@@ -204,6 +223,7 @@ def battle(player: Player, enemy_template: dict) -> bool:
     player.gold += gold
     player.gain_xp(enemy["xp"])
     player.kills += 1
+    update_quest(player, "kill", enemy["name"])
     slow_print(f"\n  🏆 Porazil jsi {enemy['name']}! Získal jsi {gold} zlatých a {enemy['xp']} XP.")
     return True
  
@@ -240,7 +260,61 @@ def shop(player: Player):
     else:
         player.inventory[name] = player.inventory.get(name, 0) + 1
         slow_print(f"  Koupil jsi {name}!")
- 
+
+# ---------------------------------------------------------------------------
+# Quest systém
+# ---------------------------------------------------------------------------
+
+def new_quest(player: Player):
+    player.quest = random.choice(QUESTS).copy()
+    player.quest_progress = 0
+
+    slow_print("\n📜 Nový quest!")
+
+    if player.quest["type"] == "kill":
+        slow_print(f"  Zabij {player.quest['amount']}x {player.quest['target']}")
+    elif player.quest["type"] == "rooms":
+        slow_print(f"  Navštiv {player.quest['amount']} místností")
+    elif player.quest["type"] == "gold":
+        slow_print(f"  Získej {player.quest['amount']} zlata")
+
+
+def update_quest(player: Player, event_type: str, value=None):
+    if not player.quest:
+        return
+
+    q = player.quest
+
+    if q["type"] == "kill" and event_type == "kill":
+        if value == q["target"]:
+            player.quest_progress += 1
+
+    elif q["type"] == "rooms" and event_type == "room":
+        player.quest_progress += 1
+
+    elif q["type"] == "gold" and event_type == "gold":
+        player.quest_progress += value
+
+    check_quest_complete(player)
+
+
+def check_quest_complete(player: Player):
+    q = player.quest
+    if not q:
+        return
+
+    if player.quest_progress >= q["amount"]:
+        slow_print("\n🏆 QUEST SPLNĚN!")
+
+        player.gold += q["reward_gold"]
+        player.gain_xp(q["reward_xp"])
+
+        slow_print(f"  Odměna: {q['reward_gold']} gold, {q['reward_xp']} XP")
+
+        player.quest = None
+        player.quest_progress = 0
+
+        new_quest(player)
  
 # ---------------------------------------------------------------------------
 # Hlavní smyčka
@@ -253,12 +327,14 @@ def main():
     slow_print("=" * 50)
     name = input("\nZadej jméno svého hrdiny: ").strip() or "Hrdina"
     player = Player(name)
+    new_quest(player)
     slow_print(f"\nVítej, {player.name}! Vstupuješ do dungeonů...\n")
     time.sleep(1)
  
     while player.hp > 0:
         room = random.choice(ROOMS)
         player.rooms_visited += 1
+        update_quest(player, "room")
         slow_print(f"\n🚪 Vstoupil jsi do: {room.upper()}")
         player.status()
  
@@ -274,6 +350,7 @@ def main():
         elif roll < 0.85:
             gold = random.randint(10, 30)
             player.gold += gold
+            update_quest(player, "gold", gold)
             slow_print(f"\n💰 Našel jsi {gold} zlatých na zemi!")
         else:
             slow_print("\n🌿 Místnost je klidná. Odpočíváš a obnovíš 15 HP.")
