@@ -57,6 +57,15 @@ ROOMS = [
 ]
  
 POTIONS = {"malý lektvar": 20, "velký lektvar": 40, "eliksír života": 70}
+
+ARTIFACTS = {
+    "Krví zalitá čepel": {"damage_bonus": 10, "crit_bonus": 0.10, "rarity": "⭐⭐⭐"},
+    "Kroužek nemrtavého": {"hp_bonus": 30, "defense_bonus": 2, "rarity": "⭐⭐⭐⭐"},
+    "Plášť stínů": {"defense_bonus": 3, "evade_bonus": 0.15, "rarity": "⭐⭐⭐"},
+    "Amulet Feniksa": {"hp_regen": 5, "rarity": "⭐⭐⭐⭐⭐"},
+    "Dračí oko": {"crit_bonus": 0.20, "damage_bonus": 5, "rarity": "⭐⭐⭐⭐"},
+    "Štít věčnosti": {"defense_bonus": 4, "hp_bonus": 20, "rarity": "⭐⭐⭐⭐"},
+}
  
 QUOTES = [
     "  💭 'Čas je peníze.' - Benjamin Franklin",
@@ -91,9 +100,9 @@ class Player:
         self.kills = 0
         self.rooms_visited = 0
         self.armor = "kožená zbroj"
-        self.rooms_visited = 0
         self.quest = None
         self.quest_progress = 0
+        self.artifacts: list[str] = []
  
     def xp_to_next(self) -> int:
         return self.level * 50
@@ -111,7 +120,18 @@ class Player:
     def attack(self) -> tuple[int, bool]:
         w = WEAPONS[self.weapon]
         dmg = random.randint(*w["damage"]) + self.level
-        crit = random.random() < w["crit"]
+        
+        # Artefakty bonus
+        for artifact in self.artifacts:
+            if "damage_bonus" in ARTIFACTS[artifact]:
+                dmg += ARTIFACTS[artifact]["damage_bonus"]
+        
+        crit_chance = w["crit"]
+        for artifact in self.artifacts:
+            if "crit_bonus" in ARTIFACTS[artifact]:
+                crit_chance += ARTIFACTS[artifact]["crit_bonus"]
+        
+        crit = random.random() < crit_chance
         if crit:
             dmg = int(dmg * 2)
         return dmg, crit
@@ -145,16 +165,25 @@ class Player:
         print(f"  ⚔️  {self.weapon}  |  💰 {self.gold} zlatých")
         inv = ", ".join(f"{k}×{v}" for k, v in self.inventory.items() if v > 0)
         print(f"  🎒 {inv or 'prázdné'}")
+        if self.artifacts:
+            artifacts_str = ", ".join(f"{a} {ARTIFACTS[a]['rarity']}" for a in self.artifacts)
+            print(f"  💎 Artefakty: {artifacts_str}")
         if self.quest:
-          if self.quest["type"] == "kill":
-            print(f"  📜 Zabij {self.quest_progress}/{self.quest['amount']} {self.quest['target']}")         
-          elif self.quest["type"] == "rooms":
-            print(f"  📜 Navštiv {self.quest_progress}/{self.quest['amount']} místností")
-        elif self.quest["type"] == "gold":
-          print(f"  📜 Získej {self.quest_progress}/{self.quest['amount']} zlata")
+            if self.quest["type"] == "kill":
+                print(f"  📜 Zabij {self.quest_progress}/{self.quest['amount']} {self.quest['target']}")         
+            elif self.quest["type"] == "rooms":
+                print(f"  📜 Navštiv {self.quest_progress}/{self.quest['amount']} místností")
+            elif self.quest["type"] == "gold":
+                print(f"  📜 Získej {self.quest_progress}/{self.quest['amount']} zlata")
  
     def take_damage(self, dmg: int):
         defense = ARMORS[self.armor]
+        
+        # Artefakty bonus k obraně
+        for artifact in self.artifacts:
+            if "defense_bonus" in ARTIFACTS[artifact]:
+                defense += ARTIFACTS[artifact]["defense_bonus"]
+        
         real_dmg = max(1, dmg - defense)
         self.hp -= real_dmg
         return real_dmg
@@ -189,7 +218,11 @@ def battle(player: Player, enemy_template: dict) -> bool:
             player.use_potion()
  
         elif action == "3":
-            if random.random() < 0.4:
+            evade_chance = 0.4
+            for artifact in player.artifacts:
+                if "evade_bonus" in ARTIFACTS[artifact]:
+                    evade_chance += ARTIFACTS[artifact]["evade_bonus"]
+            if random.random() < evade_chance:
                 slow_print("  🏃 Podařilo se ti utéct!")
                 return False
             slow_print("  Útěk se nezdařil!")
@@ -336,6 +369,16 @@ def main():
         player.rooms_visited += 1
         update_quest(player, "room")
         slow_print(f"\n🚪 Vstoupil jsi do: {room.upper()}")
+        
+        # Regenerace z artefaktů
+        for artifact in player.artifacts:
+            if "hp_regen" in ARTIFACTS[artifact]:
+                regen = ARTIFACTS[artifact]["hp_regen"]
+                old_hp = player.hp
+                player.hp = min(player.hp + regen, player.max_hp)
+                if player.hp > old_hp:
+                    slow_print(f"  ✨ {artifact} tě regeneruje o {player.hp - old_hp} HP!")
+        
         player.status()
  
         roll = random.random()
@@ -347,11 +390,20 @@ def main():
         elif roll < 0.70:
             slow_print("\n🏪 Narazil jsi na obchodníka!")
             shop(player)
-        elif roll < 0.85:
+        elif roll < 0.83:
             gold = random.randint(10, 30)
             player.gold += gold
             update_quest(player, "gold", gold)
             slow_print(f"\n💰 Našel jsi {gold} zlatých na zemi!")
+        elif roll < 0.88:
+            artifact = random.choice(list(ARTIFACTS.keys()))
+            if artifact not in player.artifacts:
+                player.artifacts.append(artifact)
+                slow_print(f"\n💎 LEGENDÁRNÍ ARTEFAKT! Našel jsi: {artifact} {ARTIFACTS[artifact]['rarity']}")
+            else:
+                slow_print(f"\n💎 Našel jsi artefakt, ale už ho máš!")
+                player.gold += 50
+                slow_print("  Dostál jsi 50 zlatých za něj.")
         else:
             slow_print("\n🌿 Místnost je klidná. Odpočíváš a obnovíš 15 HP.")
             player.hp = min(player.hp + 15, player.max_hp)
