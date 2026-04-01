@@ -218,7 +218,7 @@ def battle(player: Player, enemy_template: dict) -> bool:
             player.use_potion()
  
         elif action == "3":
-            evade_chance = 0.4
+            evade_chance = 0.6
             for artifact in player.artifacts:
                 if "evade_bonus" in ARTIFACTS[artifact]:
                     evade_chance += ARTIFACTS[artifact]["evade_bonus"]
