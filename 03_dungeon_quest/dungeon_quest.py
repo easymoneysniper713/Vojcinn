@@ -198,7 +198,7 @@ def battle(player: Player, enemy_template: dict) -> bool:
  
     while player.hp > 0 and enemy["hp"] > 0:
         print(f"\n  Ty: {player.hp} HP  |  {enemy['name']}: {enemy['hp']} HP")
-        print("  [1] Útok  [2] Lektvar  [3] Útěk [4] Obchod [5] nečinnost")
+        print("  [1] Útok  [2] Lektvar  [3] Útěk [4] Obchod [5] Vybavení [6] nečinnost")
         action = input("  > ").strip()
         
         # brnění útok nepřítele před akcí hráče
@@ -231,6 +231,9 @@ def battle(player: Player, enemy_template: dict) -> bool:
             shop(player)
         
         elif action == "5":
+            equipment_manager(player)
+        
+        elif action == "6":
             slow_print("  Vstoupil jsi do AFK režimu...")
             while True:
                 print(random.choice(QUOTES))
@@ -272,6 +275,10 @@ def shop(player: Player):
         if name != player.weapon:
             price = list(WEAPONS.keys()).index(name) * 20 + 15
             options.append(("weapon", name, price, f"Zbraň: {name} (poškození {info['damage']})"))
+    for armor_name, defense in ARMORS.items():
+        if armor_name != player.armor:
+            price = (defense - 1) * 40 + 50
+            options.append(("armor", armor_name, price, f"Zbroj: {armor_name} (obrana +{defense})"))
     for potion, heal in POTIONS.items():
         price = heal // 2
         options.append(("potion", potion, price, f"Lektvar: {potion} (léčí {heal} HP)"))
@@ -290,9 +297,60 @@ def shop(player: Player):
     if kind == "weapon":
         player.weapon = name
         slow_print(f"  Koupil jsi {name}!")
+    elif kind == "armor":
+        player.armor = name
+        slow_print(f"  Koupil jsi {name}!")
     else:
         player.inventory[name] = player.inventory.get(name, 0) + 1
         slow_print(f"  Koupil jsi {name}!")
+
+# ---------------------------------------------------------------------------
+# Správa vybavení
+# ---------------------------------------------------------------------------
+
+def equipment_manager(player: Player):
+    while True:
+        slow_print("\n⚙️  SPRÁVA VYBAVENÍ")
+        slow_print(f"\n  Aktuálně vybaveno:")
+        slow_print(f"    ⚔️  Zbraň: {player.weapon}")
+        slow_print(f"    🛡️  Zbroj: {player.armor}")
+        slow_print(f"\n  [1] Přepnout zbraň  [2] Přepnout zbroj  [3] Zpět")
+        
+        choice = input("  > ").strip()
+        
+        if choice == "1":
+            available_weapons = list(WEAPONS.keys())
+            slow_print("\n  Dostupné zbraně:")
+            for i, weapon in enumerate(available_weapons, 1):
+                marker = "✓" if weapon == player.weapon else " "
+                print(f"    [{marker}] {i}. {weapon} (poškození {WEAPONS[weapon]['damage']})")
+            try:
+                w_choice = int(input("\n  Vyber (číslo): ").strip())
+                if 1 <= w_choice <= len(available_weapons):
+                    player.weapon = available_weapons[w_choice - 1]
+                    slow_print(f"  ✓ Vybral si {player.weapon}!")
+            except:
+                slow_print("  Neplatný výběr!")
+        
+        elif choice == "2":
+            available_armors = list(ARMORS.keys())
+            slow_print("\n  Dostupné zbroje:")
+            for i, armor in enumerate(available_armors, 1):
+                marker = "✓" if armor == player.armor else " "
+                defense = ARMORS[armor]
+                print(f"    [{marker}] {i}. {armor} (obrana +{defense})")
+            try:
+                a_choice = int(input("\n  Vyber (číslo): ").strip())
+                if 1 <= a_choice <= len(available_armors):
+                    player.armor = available_armors[a_choice - 1]
+                    slow_print(f"  ✓ Vybral si {player.armor}!")
+            except:
+                slow_print("  Neplatný výběr!")
+        
+        elif choice == "3":
+            break
+        else:
+            slow_print("  Neplatná volba!")
 
 # ---------------------------------------------------------------------------
 # Quest systém
@@ -350,6 +408,61 @@ def check_quest_complete(player: Player):
         new_quest(player)
  
 # ---------------------------------------------------------------------------
+# Statistiky
+# ---------------------------------------------------------------------------
+
+def save_stats(player: Player, survived: bool):
+    """Uloží statistiky hry do souboru"""
+    import json
+    stats_file = "game_stats.json"
+    
+    stats = {
+        "jméno": player.name,
+        "úroveň": player.level,
+        "zabití_nepřátelé": player.kills,
+        "navštívené_místnosti": player.rooms_visited,
+        "zlato": player.gold,
+        "přežil": survived
+    }
+    
+    try:
+        with open(stats_file, "r", encoding="utf-8") as f:
+            all_stats = json.load(f)
+    except:
+        all_stats = []
+    
+    all_stats.append(stats)
+    
+    with open(stats_file, "w", encoding="utf-8") as f:
+        json.dump(all_stats, f, ensure_ascii=False, indent=2)
+
+
+def show_stats():
+    """Zobrazí nejlepší dosažené skóre"""
+    import json
+    stats_file = "game_stats.json"
+    
+    try:
+        with open(stats_file, "r", encoding="utf-8") as f:
+            all_stats = json.load(f)
+    except:
+        slow_print("\n  Žádné statistiky zatím nejsou!")
+        return
+    
+    if not all_stats:
+        slow_print("\n  Žádné statistiky zatím nejsou!")
+        return
+    
+    # Seřadíme podle úrovně (sestupně)
+    sorted_stats = sorted(all_stats, key=lambda x: x["úroveň"], reverse=True)
+    
+    slow_print("\n📊 TOP 5 NEJLEPŠÍCH SKÓRE:")
+    for i, stat in enumerate(sorted_stats[:5], 1):
+        status = "✓ PŘEŽIL" if stat["přežil"] else "✗ Padl"
+        slow_print(f"  {i}. {stat['jméno']:15} | Úroveň {stat['úroveň']:3} | Zabití: {stat['zabití_nepřátelé']:3} | {status}")
+
+ 
+# ---------------------------------------------------------------------------
 # Hlavní smyčka
 # ---------------------------------------------------------------------------
  
@@ -358,6 +471,21 @@ def main():
     slow_print("=" * 50)
     slow_print("        🗡️   DUNGEON QUEST   🗡️")
     slow_print("=" * 50)
+    
+    while True:
+        slow_print("\n  [1] Nová hra")
+        slow_print("  [2] Zobrazit statistiky")
+        slow_print("  [3] Konec")
+        menu_choice = input("  > ").strip()
+        
+        if menu_choice == "1":
+            break
+        elif menu_choice == "2":
+            show_stats()
+        elif menu_choice == "3":
+            slow_print("\n  Nashledanou!")
+            return
+    
     name = input("\nZadej jméno svého hrdiny: ").strip() or "Hrdina"
     player = Player(name)
     new_quest(player)
@@ -413,7 +541,8 @@ def main():
             break
  
     slow_print("\n" + "=" * 50)
-    if player.hp <= 0:
+    survived = player.hp > 0
+    if not survived:
         slow_print("💀 Byl jsi poražen! Hra skončila.")
     else:
         slow_print("🏰 Opustil jsi dungeon.")
@@ -423,6 +552,9 @@ def main():
     slow_print(f"   Navštívené místnosti: {player.rooms_visited}")
     slow_print(f"   Zlaté:          {player.gold}")
     slow_print("=" * 50)
+    
+    # Uloží statistiky
+    save_stats(player, survived)
  
  
 if __name__ == "__main__":
