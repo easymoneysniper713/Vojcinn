@@ -1,0 +1,10 @@
+[
+  {
+    "jméno": "vojta",
+    "úroveň": 1,
+    "zabití_nepřátelé": 2,
+    "navštívené_místnosti": 6,
+    "zlato": 12,
+    "přežil": true
+  }
+]
