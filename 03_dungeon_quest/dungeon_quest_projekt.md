@@ -47,3 +47,4 @@ Changelog (Patch Notes):
 - **Verze 1.1** (23. března 2026): Přeloženy všechny řetězce do češtiny pro úplnou lokalizaci. Opraveny nekonzistence v názvech zbraní, nepřátel a místností.
 - **Verze 1.2** (25. března 2026): Přidána nová funkce brňení
 - **Verze 1.3** (26. března 2026): byly přidány questy.
+- **Verze 1.4** (31. března 2026): Byly přidané hry

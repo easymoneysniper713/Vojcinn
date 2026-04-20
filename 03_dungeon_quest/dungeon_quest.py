@@ -201,12 +201,6 @@ def battle(player: Player, enemy_template: dict) -> bool:
         print("  [1] Útok  [2] Lektvar  [3] Útěk [4] Obchod [5] nečinnost")
         action = input("  > ").strip()
         
-        # brnění útok nepřítele před akcí hráče
-        if enemy["hp"] > 0:
-            e_dmg = random.randint(*enemy["damage"])
-            real = player.take_damage(e_dmg)
-            slow_print(f"  {enemy['name']} tě zasáhl za {real} poškození!")
-        
         # Kritický zásah a útok hráče
         if action == "1":
             dmg, crit = player.attack()
@@ -245,8 +239,8 @@ def battle(player: Player, enemy_template: dict) -> bool:
         # Útok nepřítele
         if enemy["hp"] > 0:
             e_dmg = random.randint(*enemy["damage"])
-            player.hp -= e_dmg
-            slow_print(f"  {enemy['name']} tě zasáhl za {e_dmg} poškození!")
+            real = player.take_damage(e_dmg)
+            slow_print(f"  {enemy['name']} tě zasáhl za {real} poškození!")
  
     if player.hp <= 0:
         return False
