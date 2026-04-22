@@ -57,14 +57,9 @@ Instalace:
 
 Changelog (Patch Notes):
 - **Verze 1.1** (23. března 2026): Přeloženy všechny řetězce do češtiny pro úplnou lokalizaci. Opraveny nekonzistence v názvech zbraní, nepřátel a místností.
-<<<<<<< HEAD
-- **Verze 1.2** (25. března 2026): Přidána nová funkce brňení
-- **Verze 1.3** (26. března 2026): byly přidány questy.
-- **Verze 1.4** (31. března 2026): Byly přidané hry
-=======
 - **Verze 1.2** (25. března 2026): Přidána nová funkce brnění (zbroje).
 - **Verze 1.3** (26. března 2026): Přidány questy pro dodatečnou motivaci hráče.
 - **Verze 1.4** (10. dubna 2026): Přidány artefakty s bonusy k útoku, obraně a regeneraci.
 - **Verze 1.5** (15. dubna 2026): Přidána správa vybavení pro přepínání zbraní a zbrojí.
 - **Verze 1.6** (18. dubna 2026): Přidán AFK režim s inspirativními citáty a systém statistik s ukládáním a zobrazením top skóre.
->>>>>>> 91c476a88a13be1b76f01f6f69a56242ea37c33d
+
