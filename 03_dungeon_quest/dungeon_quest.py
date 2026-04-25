@@ -231,10 +231,13 @@ def battle(player: Player, enemy_template: dict) -> bool:
             slow_print("  Vstoupil jsi do AFK režimu...")
             while True:
                 print(random.choice(QUOTES))
-                cmd = input("  Napiš 1 pro návrat do hry, Enter pro další quote: ").strip()
-                if cmd == "1":
+                print("  Stiskni 1 pro návrat do hry, nebo jinou klávesu pro další quote...", end="", flush=True)
+                key = msvcrt.getwch()
+                print()
+                if key == "1":
                     slow_print("  Vrátil ses do hry!")
                     break
+                time.sleep(0.5)
         
         else:
             slow_print("  Neplatná volba, přišel jsi o tah!")
@@ -267,10 +270,12 @@ def shop(player: Player):
     options = []
     for name, info in WEAPONS.items():
         if name != player.weapon:
+            # Cena zbraní roste s pořadím v nabídce: první stojí 15, pak +20 za další
             price = list(WEAPONS.keys()).index(name) * 20 + 15
             options.append(("weapon", name, price, f"Zbraň: {name} (poškození {info['damage']})"))
     for armor_name, defense in ARMORS.items():
         if armor_name != player.armor:
+            # Cena zbroje se počítá podle její obranné hodnoty
             price = (defense - 1) * 40 + 50
             options.append(("armor", armor_name, price, f"Zbroj: {armor_name} (obrana +{defense})"))
     for potion, heal in POTIONS.items():
