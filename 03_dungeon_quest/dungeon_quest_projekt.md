@@ -1,5 +1,3 @@
-Dokumentace projektu: Dungeon Quest
-
 Popis a cíl projektu:
 Tato aplikace je textová RPG hra, ve které hráč prochází dungeonem, bojuje s nepřáteli, sbírá zlato a získává zkušenosti. Cílem projektu je vytvořit jednoduchou hru v konzoli, která simuluje základní herní mechaniky jako souboj, levelování, správu inventáře, questy a sbírání artefaktů. Hlavním cílem hráče je přežít co nejdéle, porazit co nejvíce nepřátel, splnit questy a dosáhnout co nejvyšší úrovně.
 
@@ -20,6 +18,8 @@ Artejakty: Hráč může sbírat artefakty, které poskytují bonusy k útoku, o
 
 Questy: Hráč dostává questy typu zabití určitých nepřátel, navštívení místností nebo získání zlata. Po splnění získává odměny.
 
+Společníci: Hráč může získat společníka, který mu pomáhá v boji. Společníci útočí na nepřítele každé kolo a někteří léčí hráče po každém kole. Dostupní společníci: Luč (léčí 5 HP), Stín (extra poškození), Ohnivá koule (silný útok), Zlatý dráček (léčí 10 HP).
+
 Statistiky: Po skončení hry se uloží statistiky a lze zobrazit top skóre.
 
 Ukončení: Hra končí smrtí hráče nebo zadáním „q“ pro ukončení.
@@ -35,6 +35,8 @@ Levelovací systém: Hráč získává zkušenosti (XP) za poražené nepřátel
 Quest systém: Questy jsou náhodně přiřazovány a sledují pokrok hráče. Po splnění se přiřadí nový quest.
 
 Artefakty: Artefakty poskytují trvalé bonusy k poškození, obraně, kritickým zásahům nebo regeneraci HP na začátku každé místnosti.
+
+Společníci: Speciální systém, kde hráč může získat NPC společníka. Společník útočí každé kolo v boji a někteří léčí hráče. Společníci jsou definováni ve slovníku COMPANIONS s vlastnostmi damage a heal.
 
 Logické větvení: Program využívá podmínky if, elif a else pro řízení průběhu hry, například při výběru akce hráče, kontrole smrti, nákupu v obchodě, správě vybavení nebo generování událostí.
 
@@ -62,4 +64,4 @@ Changelog (Patch Notes):
 - **Verze 1.4** (10. dubna 2026): Přidány artefakty s bonusy k útoku, obraně a regeneraci.
 - **Verze 1.5** (15. dubna 2026): Přidána správa vybavení pro přepínání zbraní a zbrojí.
 - **Verze 1.6** (18. dubna 2026): Přidán AFK režim s inspirativními citáty a systém statistik s ukládáním a zobrazením top skóre.
-
+- **Verze: 2.0** (přidán systém společníků)

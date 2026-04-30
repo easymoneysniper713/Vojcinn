@@ -74,6 +74,17 @@ QUOTES = [
     "  💭 'Štěstí není cíl, ale způsob života.' - Albert Camus",
     "  💭 'Nejlepší způsob, jak předpovědět budoucnost, je ji vytvořit.' - Peter Drucker",
 ]
+
+# ----------------------------------------------------------------------------
+# Společník
+# ----------------------------------------------------------------------------
+
+COMPANIONS = {
+    "Luč": {"damage": (3, 8), "heal": 5, "desc": "Malý skřítek, léčí tě po každém kole.", "rarity": "⭐⭐"},
+    "Stín": {"damage": (5, 10), "heal": 0, "desc": "Temný duch, způsobuje extra poškození.", "rarity": "⭐⭐⭐"},
+    "Ohnivá koule": {"damage": (8, 15), "heal": 0, "desc": "Magický elementál, silný útok.", "rarity": "⭐⭐⭐⭐"},
+    "Zlatý dráček": {"damage": (4, 6), "heal": 10, "desc": "Drahocenný dráček, léčí více HP.", "rarity": "⭐⭐⭐⭐⭐"},
+}
  
 
 QUESTS = [
@@ -103,6 +114,7 @@ class Player:
         self.quest = None
         self.quest_progress = 0
         self.artifacts: list[str] = []
+        self.companion: str | None = None
  
     def xp_to_next(self) -> int:
         return self.level * 50
@@ -168,6 +180,9 @@ class Player:
         if self.artifacts:
             artifacts_str = ", ".join(f"{a} {ARTIFACTS[a]['rarity']}" for a in self.artifacts)
             print(f"  💎 Artefakty: {artifacts_str}")
+        if self.companion:
+            comp = COMPANIONS[self.companion]
+            print(f"  🦸 Společník: {self.companion} {comp['rarity']}")
         if self.quest:
             if self.quest["type"] == "kill":
                 print(f"  📜 Zabij {self.quest_progress}/{self.quest['amount']} {self.quest['target']}")         
@@ -207,6 +222,22 @@ def battle(player: Player, enemy_template: dict) -> bool:
             enemy["hp"] -= dmg
             msg = f"  {'💥 KRITICKÝ ZÁSAH! ' if crit else ''}Zasáhl jsi za {dmg} poškození."
             slow_print(msg)
+            
+            # Útok společníka
+            if player.companion:
+                comp = COMPANIONS[player.companion]
+                comp_dmg = random.randint(*comp["damage"])
+                enemy["hp"] -= comp_dmg
+                slow_print(f"  🦸 {player.companion} útočí za {comp_dmg} poškození!")
+            
+            # Léčba od společníka
+            if player.companion:
+                comp = COMPANIONS[player.companion]
+                if comp["heal"] > 0:
+                    old_hp = player.hp
+                    player.hp = min(player.hp + comp["heal"], player.max_hp)
+                    if player.hp > old_hp:
+                        slow_print(f"  💚 {player.companion} tě vyléčil o {player.hp - old_hp} HP!")
  
         elif action == "2":
             player.use_potion()
@@ -531,6 +562,17 @@ def main():
                 slow_print(f"\n💎 Našel jsi artefakt, ale už ho máš!")
                 player.gold += 50
                 slow_print("  Dostál jsi 50 zlatých za něj.")
+        elif roll < 0.93:
+            if not player.companion:
+                companion = random.choice(list(COMPANIONS.keys()))
+                player.companion = companion
+                comp = COMPANIONS[companion]
+                slow_print(f"\n🦸 NOVÝ SPOLEČNÍK! Připojil se k tobě: {companion} {comp['rarity']}")
+                slow_print(f"   {comp['desc']}")
+            else:
+                gold = random.randint(15, 40)
+                player.gold += gold
+                slow_print(f"\n💰 Našel jsi {gold} zlatých v trávě!")
         else:
             slow_print("\n🌿 Místnost je klidná. Odpočíváš a obnovíš 15 HP.")
             player.hp = min(player.hp + 15, player.max_hp)
