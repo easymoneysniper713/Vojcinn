@@ -1,0 +1,10 @@
+[
+  {
+    "jméno": "Adam",
+    "úroveň": 1,
+    "zabití_nepřátelé": 1,
+    "navštívené_místnosti": 2,
+    "zlato": 21,
+    "přežil": true
+  }
+]

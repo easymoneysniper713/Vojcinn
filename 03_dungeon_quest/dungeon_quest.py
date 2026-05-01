@@ -58,6 +58,14 @@ ROOMS = [
  
 POTIONS = {"malý lektvar": 20, "velký lektvar": 40, "eliksír života": 70}
 
+SPELLS = {
+    "ohnivá koule": {"damage": (15, 25), "mana": 15, "desc": "Způsobí 15-25 požáru", "rarity": "⭐"},
+    "ledový šíp": {"damage": (10, 20), "mana": 10, "desc": "Způsobí 10-20 mrazivého poškození", "rarity": "⭐"},
+    "blesk": {"damage": (20, 35), "mana": 25, "desc": "Silný bleskový útok 20-35", "rarity": "⭐⭐"},
+    "temnota": {"damage": (30, 50), "mana": 40, "desc": "Prázdnota 30-50", "rarity": "⭐⭐⭐"},
+    "sluneční paprsek": {"damage": (40, 60), "mana": 50, "desc": "Čistá světelná energie 40-60", "rarity": "⭐⭐⭐⭐"},
+}
+
 ARTIFACTS = {
     "Krví zalitá čepel": {"damage_bonus": 10, "crit_bonus": 0.10, "rarity": "⭐⭐⭐"},
     "Kroužek nemrtavého": {"hp_bonus": 30, "defense_bonus": 2, "rarity": "⭐⭐⭐⭐"},
@@ -115,6 +123,9 @@ class Player:
         self.quest_progress = 0
         self.artifacts: list[str] = []
         self.companion: str | None = None
+        self.mana = 50
+        self.max_mana = 50
+        self.learned_spells: list[str] = ["ohnivá koule"]  # Začíná s jedním kouzlem
  
     def xp_to_next(self) -> int:
         return self.level * 50
@@ -126,8 +137,10 @@ class Player:
             self.level += 1
             bonus = random.randint(10, 20)
             self.max_hp += bonus
+            self.mana += 5  # Bonusová mana při level up
             self.hp = min(self.hp + bonus, self.max_hp)
-            slow_print(f"\n✨ Postoupil jsi na úroveň {self.level}! +{bonus} max HP")
+            self.mana = min(self.mana + 5, self.max_mana)
+            slow_print(f"\n✨ Postoupil jsi na úroveň {self.level}! +{bonus} max HP +5 max mana")
  
     def attack(self) -> tuple[int, bool]:
         w = WEAPONS[self.weapon]
@@ -175,6 +188,7 @@ class Player:
         print(f"\n  👤 {self.name}  |  Úroveň {self.level}  |  XP: {self.xp}/{self.xp_to_next()}")
         print(f"  ❤️  [{bar}] {self.hp}/{self.max_hp}")
         print(f"  ⚔️  {self.weapon}  |  💰 {self.gold} zlatých")
+        print(f"  💧 Mana: {self.mana}/{self.max_mana}")
         inv = ", ".join(f"{k}×{v}" for k, v in self.inventory.items() if v > 0)
         print(f"  🎒 {inv or 'prázdné'}")
         if self.artifacts:
@@ -213,7 +227,7 @@ def battle(player: Player, enemy_template: dict) -> bool:
  
     while player.hp > 0 and enemy["hp"] > 0:
         print(f"\n  Ty: {player.hp} HP  |  {enemy['name']}: {enemy['hp']} HP")
-        print("  [1] Útok  [2] Lektvar  [3] Útěk [4] Obchod [5] Vybavení [6] nečinnost")
+        print("  [1] Útok  [2] Lektvar  [3] Útěk [4] Obchod [5] Vybavení [6] Kouzla [7] nečinnost")
         action = input("  > ").strip()
         
         # Kritický zásah a útok hráče
@@ -259,6 +273,9 @@ def battle(player: Player, enemy_template: dict) -> bool:
             equipment_manager(player)
         
         elif action == "6":
+            cast_spell(player, enemy)
+        
+        elif action == "7":
             slow_print("  Vstoupil jsi do AFK režimu...")
             while True:
                 print(random.choice(QUOTES))
@@ -292,6 +309,87 @@ def battle(player: Player, enemy_template: dict) -> bool:
     return True
  
  
+# ---------------------------------------------------------------------------
+# Kouzelnický systém
+# ---------------------------------------------------------------------------
+
+def cast_spell(player: Player, enemy: dict):
+    """Funkce pro seslání kouzla v boji"""
+    if not player.learned_spells:
+        slow_print("  Nemáš žádná kouzla!")
+        return
+    
+    slow_print("\n🔮 DOSTUPNÁ KOUZLA:")
+    for i, spell_name in enumerate(player.learned_spells, 1):
+        spell = SPELLS[spell_name]
+        print(f"  {i}. {spell_name} {spell['rarity']} – {spell['desc']}")
+        print(f"      Poškození: {spell['damage']} | Mana: {spell['mana']}")
+    
+    print(f"\n  💧 Tvoje mana: {player.mana}/{player.max_mana}")
+    print("  (Enter = zpět)")
+    
+    choice = input("  > ").strip()
+    if not choice.isdigit():
+        return
+    
+    idx = int(choice) - 1
+    if idx < 0 or idx >= len(player.learned_spells):
+        return
+    
+    spell_name = player.learned_spells[idx]
+    spell = SPELLS[spell_name]
+    
+    if player.mana < spell["mana"]:
+        slow_print(f"  ❌ Nemáš dostatek many! Potřebuješ {spell['mana']}, máš {player.mana}")
+        return
+    
+    # Seslání kouzla
+    player.mana -= spell["mana"]
+    dmg = random.randint(*spell["damage"])
+    enemy["hp"] -= dmg
+    
+    slow_print(f"  ✨ Seslal jsi {spell_name}! Způsobil jsi {dmg} magického poškození!")
+
+
+def spell_shop(player: Player):
+    """Obchod s kouzly - hráč se může naučit nová kouzla"""
+    slow_print("\n🔮 KOUZELNICKÝ OBCHOD!")
+    slow_print("  Můžeš se naučit nová kouzla:\n")
+    
+    available_spells = [s for s in SPELLS.keys() if s not in player.learned_spells]
+    
+    if not available_spells:
+        slow_print("  Znáš už všechna dostupná kouzla!")
+        return
+    
+    options = []
+    for i, spell_name in enumerate(available_spells, 1):
+        spell = SPELLS[spell_name]
+        # Cena kouzla podle rarity
+        price = (i * 30) + 20
+        options.append((spell_name, price, spell))
+        print(f"  {i}. {spell_name} {spell['rarity']}")
+        print(f"     {spell['desc']}")
+        print(f"     Poškození: {spell['damage']} | Mana: {spell['mana']} | Cena: {price} zlatých")
+        print()
+    
+    print(f"  Máš {player.gold} zlatých. (Enter = odejít)")
+    choice = input("  > ").strip()
+    
+    if not choice.isdigit() or not (1 <= int(choice) <= len(options)):
+        return
+    
+    spell_name, price, _ = options[int(choice) - 1]
+    
+    if player.gold < price:
+        slow_print("  Nemáš dost zlatých!")
+        return
+    
+    player.gold -= price
+    player.learned_spells.append(spell_name)
+    slow_print(f"  ✅ Naučil jsi se kouzlo: {spell_name}!")
+
+
 # ---------------------------------------------------------------------------
 # Obchod
 # ---------------------------------------------------------------------------
@@ -548,12 +646,15 @@ def main():
         elif roll < 0.70:
             slow_print("\n🏪 Narazil jsi na obchodníka!")
             shop(player)
-        elif roll < 0.83:
+        elif roll < 0.78:
+            slow_print("\n🔮 Narazil jsi na kouzelníka!")
+            spell_shop(player)
+        elif roll < 0.91:
             gold = random.randint(10, 30)
             player.gold += gold
             update_quest(player, "gold", gold)
             slow_print(f"\n💰 Našel jsi {gold} zlatých na zemi!")
-        elif roll < 0.88:
+        elif roll < 0.96:
             artifact = random.choice(list(ARTIFACTS.keys()))
             if artifact not in player.artifacts:
                 player.artifacts.append(artifact)
@@ -562,7 +663,7 @@ def main():
                 slow_print(f"\n💎 Našel jsi artefakt, ale už ho máš!")
                 player.gold += 50
                 slow_print("  Dostál jsi 50 zlatých za něj.")
-        elif roll < 0.93:
+        elif roll < 1.0:
             if not player.companion:
                 companion = random.choice(list(COMPANIONS.keys()))
                 player.companion = companion
@@ -574,8 +675,9 @@ def main():
                 player.gold += gold
                 slow_print(f"\n💰 Našel jsi {gold} zlatých v trávě!")
         else:
-            slow_print("\n🌿 Místnost je klidná. Odpočíváš a obnovíš 15 HP.")
+            slow_print("\n🌿 Místnost je klidná. Odpočíváš a obnovíš 15 HP a 10 many.")
             player.hp = min(player.hp + 15, player.max_hp)
+            player.mana = min(player.mana + 10, player.max_mana)
  
         cont = input("\nPokračovat dál? (Enter = ano, q = konec): ").strip().lower()
         if cont == "q":
