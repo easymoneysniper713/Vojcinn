@@ -43,6 +43,9 @@ ENEMIES = [
     {"name": "Temný rytíř",    "hp": 45, "damage": (7, 15), "xp": 50, "gold": (12, 25)},
     {"name": "Michalův hněv",  "hp": 100,"damage": (15, 30),"xp": 150,"gold": (50, 100)},
 ]
+
+# Tajný boss - objeví se vzácně
+SECRET_BOSS = {"name": "Temný Arcimág", "hp": 150, "damage": (20, 40), "xp": 300, "gold": (100, 200), "is_secret": True}
  
 ROOMS = [
     "tmavá chodba",
@@ -82,6 +85,21 @@ QUOTES = [
     "  💭 'Štěstí není cíl, ale způsob života.' - Albert Camus",
     "  💭 'Nejlepší způsob, jak předpovědět budoucnost, je ji vytvořit.' - Peter Drucker",
 ]
+
+PROPHECIES = [
+    "  🔮 Vidíš vizi: 'V tmě na tebe čeká zlo...'",
+    "  🔮 Slyšíš hlas: 'Připrav se, smrtelník, nebezpečí se blíží!'",
+    "  🔮 Cítíš chlad: 'Mocný nepřítel se probouzí...'",
+    "  🔮 Vidíš přízrak: 'Ten, který přichází, byl kdysi lidský...'",
+    "  🔮 Slyšíš hluk: 'Něco mocného se pohybuje v temnodě...'",
+]
+
+# Synergií artefaktů - kombinace dávají bonusy
+ARTIFACT_SYNERGIES = {
+    ("Krví zalitá čepel", "Dračí oko"): {"damage_bonus": 15, "crit_bonus": 0.15, "name": "⚡ DRAČÍ ÚTOK"},
+    ("Plášť stínů", "Kroužek nemrtavého"): {"defense_bonus": 5, "evade_bonus": 0.10, "name": "👻 STÍNNÁ OCHRANA"},
+    ("Amulet Feniksa", "Štít věčnosti"): {"hp_regen": 8, "hp_bonus": 40, "name": "🔥 FENIXOVO VZKŘÍŠENÍ"},
+}
 
 # ----------------------------------------------------------------------------
 # Společník
@@ -126,6 +144,8 @@ class Player:
         self.mana = 50
         self.max_mana = 50
         self.learned_spells: list[str] = ["ohnivá koule"]  # Začíná s jedním kouzlem
+        self.last_stand_used = False  # Poslední vdech - jednou za hru
+        self.prophecies_count = 0  # Počítač proroctví
  
     def xp_to_next(self) -> int:
         return self.level * 50
@@ -151,15 +171,39 @@ class Player:
             if "damage_bonus" in ARTIFACTS[artifact]:
                 dmg += ARTIFACTS[artifact]["damage_bonus"]
         
+        # Synergy bonus
+        synergy_bonus = self._get_synergy_bonus()
+        if synergy_bonus and "damage_bonus" in synergy_bonus:
+            dmg += synergy_bonus["damage_bonus"]
+        
         crit_chance = w["crit"]
         for artifact in self.artifacts:
             if "crit_bonus" in ARTIFACTS[artifact]:
                 crit_chance += ARTIFACTS[artifact]["crit_bonus"]
         
+        # Synergy crit bonus
+        if synergy_bonus and "crit_bonus" in synergy_bonus:
+            crit_chance += synergy_bonus["crit_bonus"]
+        
         crit = random.random() < crit_chance
         if crit:
             dmg = int(dmg * 2)
         return dmg, crit
+    
+    def _get_synergy_bonus(self) -> dict:
+        """Zkontroluje, jestli má hráč synergie artefaktů"""
+        for artifacts_combo, bonuses in ARTIFACT_SYNERGIES.items():
+            if all(art in self.artifacts for art in artifacts_combo):
+                return bonuses
+        return None
+    
+    def get_active_synergies(self) -> list[str]:
+        """Vrátí seznam aktivních synergií"""
+        active = []
+        for artifacts_combo, bonuses in ARTIFACT_SYNERGIES.items():
+            if all(art in self.artifacts for art in artifacts_combo):
+                active.append(bonuses["name"])
+        return active
 
     
     def use_potion(self) -> bool:
@@ -194,6 +238,10 @@ class Player:
         if self.artifacts:
             artifacts_str = ", ".join(f"{a} {ARTIFACTS[a]['rarity']}" for a in self.artifacts)
             print(f"  💎 Artefakty: {artifacts_str}")
+        synergies = self.get_active_synergies()
+        if synergies:
+            synergy_str = ", ".join(synergies)
+            print(f"  ⚡ AKTIVNÍ SYNERGIÍ: {synergy_str}")
         if self.companion:
             comp = COMPANIONS[self.companion]
             print(f"  🦸 Společník: {self.companion} {comp['rarity']}")
@@ -213,6 +261,11 @@ class Player:
             if "defense_bonus" in ARTIFACTS[artifact]:
                 defense += ARTIFACTS[artifact]["defense_bonus"]
         
+        # Synergy bonus k obraně
+        synergy_bonus = self._get_synergy_bonus()
+        if synergy_bonus and "defense_bonus" in synergy_bonus:
+            defense += synergy_bonus["defense_bonus"]
+        
         real_dmg = max(1, dmg - defense)
         self.hp -= real_dmg
         return real_dmg
@@ -221,9 +274,26 @@ class Player:
 # ---------------------------------------------------------------------------
 # Boj
 # ---------------------------------------------------------------------------
+
+def trigger_prophecy(player: Player):
+    """Náhodně spustí proroctví"""
+    if random.random() < 0.3 and player.prophecies_count < 3:
+        player.prophecies_count += 1
+        slow_print(random.choice(PROPHECIES))
+        time.sleep(1)
+
 def battle(player: Player, enemy_template: dict) -> bool:
     enemy = dict(enemy_template)
+    
+    # Speciální část pro tajného bosse
+    is_secret_boss = enemy_template.get("is_secret", False)
+    if is_secret_boss:
+        slow_print("\n" + "=" * 50)
+        slow_print("⚡ ⚡ ⚡ NEOČEKÁVANÝ STŘET! ⚡ ⚡ ⚡")
+        time.sleep(1)
+    
     slow_print(f"\n⚔️  Narazil jsi na {enemy['name']}! (HP: {enemy['hp']})")
+    trigger_prophecy(player)
  
     while player.hp > 0 and enemy["hp"] > 0:
         print(f"\n  Ty: {player.hp} HP  |  {enemy['name']}: {enemy['hp']} HP")
@@ -295,6 +365,59 @@ def battle(player: Player, enemy_template: dict) -> bool:
             e_dmg = random.randint(*enemy["damage"])
             real = player.take_damage(e_dmg)
             slow_print(f"  {enemy['name']} tě zasáhl za {real} poškození!")
+    
+    # Poslední vdech - šance na záchranu
+    if player.hp <= 0 and not player.last_stand_used:
+        if random.random() < 0.4:  # 40% šance
+            player.last_stand_used = True
+            player.hp = player.max_hp // 2
+            slow_print("\n" + "=" * 50)
+            slow_print("🔥 POSLEDNÍ VDECH! 🔥")
+            slow_print(f"  Podařilo se ti vstát! Obnovil si si {player.hp} HP!")
+            slow_print("=" * 50)
+            # Pokračuj v boji
+            while player.hp > 0 and enemy["hp"] > 0:
+                print(f"\n  Ty: {player.hp} HP  |  {enemy['name']}: {enemy['hp']} HP")
+                print("  [1] Útok  [2] Lektvar  [3] Útěk [4] Obchod [5] Vybavení [6] Kouzla [7] nečinnost")
+                action = input("  > ").strip()
+                
+                if action == "1":
+                    dmg, crit = player.attack()
+                    enemy["hp"] -= dmg
+                    msg = f"  {'💥 KRITICKÝ ZÁSAH! ' if crit else ''}Zasáhl jsi za {dmg} poškození."
+                    slow_print(msg)
+                    
+                    if player.companion:
+                        comp = COMPANIONS[player.companion]
+                        comp_dmg = random.randint(*comp["damage"])
+                        enemy["hp"] -= comp_dmg
+                        slow_print(f"  🦸 {player.companion} útočí za {comp_dmg} poškození!")
+                    
+                    if player.companion:
+                        comp = COMPANIONS[player.companion]
+                        if comp["heal"] > 0:
+                            old_hp = player.hp
+                            player.hp = min(player.hp + comp["heal"], player.max_hp)
+                            if player.hp > old_hp:
+                                slow_print(f"  💚 {player.companion} tě vyléčil o {player.hp - old_hp} HP!")
+                
+                elif action == "2":
+                    player.use_potion()
+                elif action == "3":
+                    if random.random() < 0.6:
+                        slow_print("  🏃 Podařilo se ti utéct!")
+                        return False
+                    slow_print("  Útěk se nezdařil!")
+                else:
+                    slow_print("  Neplatná volba, přišel jsi o tah!")
+                
+                if enemy["hp"] > 0:
+                    e_dmg = random.randint(*enemy["damage"])
+                    real = player.take_damage(e_dmg)
+                    slow_print(f"  {enemy['name']} tě zasáhl za {real} poškození!")
+            
+            if player.hp <= 0:
+                return False
  
     if player.hp <= 0:
         return False
@@ -638,7 +761,13 @@ def main():
         player.status()
  
         roll = random.random()
-        if roll < 0.55:
+        
+        # Tajný boss se objeví vzácně (1% šance), ale jen pokud je hráč dostatečně silný
+        if roll < 0.01 and player.level >= 5:
+            survived = battle(player, SECRET_BOSS)
+            if not survived and player.hp <= 0:
+                break
+        elif roll < 0.55:
             enemy = random.choice(ENEMIES)
             survived = battle(player, enemy)
             if not survived and player.hp <= 0:
@@ -659,6 +788,10 @@ def main():
             if artifact not in player.artifacts:
                 player.artifacts.append(artifact)
                 slow_print(f"\n💎 LEGENDÁRNÍ ARTEFAKT! Našel jsi: {artifact} {ARTIFACTS[artifact]['rarity']}")
+                # Zkontroluj nové synergií
+                synergies = player.get_active_synergies()
+                if synergies:
+                    slow_print(f"\n✨ NOVÁ SYNERGIÍ AKTIVOVÁNA: {', '.join(synergies)}!")
             else:
                 slow_print(f"\n💎 Našel jsi artefakt, ale už ho máš!")
                 player.gold += 50
