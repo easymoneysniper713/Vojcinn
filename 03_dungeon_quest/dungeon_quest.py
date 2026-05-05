@@ -788,14 +788,23 @@ def main():
             if artifact not in player.artifacts:
                 player.artifacts.append(artifact)
                 slow_print(f"\n💎 LEGENDÁRNÍ ARTEFAKT! Našel jsi: {artifact} {ARTIFACTS[artifact]['rarity']}")
-                # Zkontroluj nové synergií
+                # Zkontroluj nové synergie
                 synergies = player.get_active_synergies()
                 if synergies:
-                    slow_print(f"\n✨ NOVÁ SYNERGIÍ AKTIVOVÁNA: {', '.join(synergies)}!")
+                    slow_print(f"\n✨ NOVÁ SYNERGIE AKTIVOVÁNA: {', '.join(synergies)}!")
             else:
                 slow_print(f"\n💎 Našel jsi artefakt, ale už ho máš!")
                 player.gold += 50
                 slow_print("  Dostál jsi 50 zlatých za něj.")
+        elif roll < 0.98:
+            slow_print("\n🌊 Narazil jsi na mystickou fontánu!")
+            restored_hp = min(30, player.max_hp - player.hp)
+            restored_mana = min(20, player.max_mana - player.mana)
+            player.hp += restored_hp
+            player.mana += restored_mana
+            slow_print(f"  ✓ Obnovil jsi {restored_hp} HP a {restored_mana} many.")
+            if restored_hp == 0 and restored_mana == 0:
+                slow_print("  Fontána ti nic nedala, ale její klid tě uklidnil.")
         elif roll < 1.0:
             if not player.companion:
                 companion = random.choice(list(COMPANIONS.keys()))
@@ -807,10 +816,6 @@ def main():
                 gold = random.randint(15, 40)
                 player.gold += gold
                 slow_print(f"\n💰 Našel jsi {gold} zlatých v trávě!")
-        else:
-            slow_print("\n🌿 Místnost je klidná. Odpočíváš a obnovíš 15 HP a 10 many.")
-            player.hp = min(player.hp + 15, player.max_hp)
-            player.mana = min(player.mana + 10, player.max_mana)
  
         cont = input("\nPokračovat dál? (Enter = ano, q = konec): ").strip().lower()
         if cont == "q":
