@@ -513,6 +513,44 @@ def spell_shop(player: Player):
     slow_print(f"  ✅ Naučil jsi se kouzlo: {spell_name}!")
 
 
+def mystic_chest(player: Player):
+    """Náhodná událost: hráč najde mystickou truhlu."""
+    slow_print("\n📦 Našel jsi starou mystickou truhlu!")
+    choice = input("  Otevřít truhlu? (Enter = ano, n = ne): ").strip().lower()
+    if choice == "n":
+        slow_print("  Opatrně ji obcházíš a pokračuješ dál.")
+        return
+
+    if random.random() < 0.75:
+        reward_type = random.choice(["gold", "potion", "artifact"])
+        if reward_type == "gold":
+            gold = random.randint(25, 60)
+            player.gold += gold
+            update_quest(player, "gold", gold)
+            slow_print(f"  💰 Truhla obsahovala {gold} zlatých!")
+        elif reward_type == "potion":
+            potion = random.choice(list(POTIONS.keys()))
+            player.inventory[potion] = player.inventory.get(potion, 0) + 1
+            slow_print(f"  🧪 Našel jsi {potion} v truhle!")
+        else:
+            artifact = random.choice(list(ARTIFACTS.keys()))
+            if artifact not in player.artifacts:
+                player.artifacts.append(artifact)
+                slow_print(f"  💎 Truhla obsahovala artefakt: {artifact} {ARTIFACTS[artifact]['rarity']}!")
+                synergies = player.get_active_synergies()
+                if synergies:
+                    slow_print(f"\n✨ NOVÁ SYNERGIE AKTIVOVÁNA: {', '.join(synergies)}!")
+            else:
+                gold = random.randint(20, 40)
+                player.gold += gold
+                slow_print(f"  Artefakt jsi již měl. Truhla ti místo něj dala {gold} zlatých.")
+    else:
+        trap_damage = random.randint(10, 25)
+        player.hp = max(1, player.hp - trap_damage)
+        slow_print(f"  ⚠️ Je to past! Utrpěl jsi {trap_damage} poškození.")
+        slow_print(f"  Tvoje HP: {player.hp}/{player.max_hp}")
+
+
 # ---------------------------------------------------------------------------
 # Obchod
 # ---------------------------------------------------------------------------
@@ -778,12 +816,12 @@ def main():
         elif roll < 0.78:
             slow_print("\n🔮 Narazil jsi na kouzelníka!")
             spell_shop(player)
-        elif roll < 0.91:
+        elif roll < 0.95:
             gold = random.randint(10, 30)
             player.gold += gold
             update_quest(player, "gold", gold)
             slow_print(f"\n💰 Našel jsi {gold} zlatých na zemi!")
-        elif roll < 0.96:
+        elif roll < 0.97:
             artifact = random.choice(list(ARTIFACTS.keys()))
             if artifact not in player.artifacts:
                 player.artifacts.append(artifact)
@@ -805,7 +843,9 @@ def main():
             slow_print(f"  ✓ Obnovil jsi {restored_hp} HP a {restored_mana} many.")
             if restored_hp == 0 and restored_mana == 0:
                 slow_print("  Fontána ti nic nedala, ale její klid tě uklidnil.")
-        elif roll < 1.0:
+        elif roll < 0.99:
+            mystic_chest(player)
+        else:
             if not player.companion:
                 companion = random.choice(list(COMPANIONS.keys()))
                 player.companion = companion
