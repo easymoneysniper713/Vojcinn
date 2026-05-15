@@ -726,6 +726,81 @@ def save_stats(player: Player, survived: bool):
         json.dump(all_stats, f, ensure_ascii=False, indent=2)
 
 
+def save_game(player: Player):
+    """Uloží aktuální stav hry"""
+    import json
+    save_file = "save_game.json"
+    
+    save_data = {
+        "name": player.name,
+        "hp": player.hp,
+        "max_hp": player.max_hp,
+        "gold": player.gold,
+        "xp": player.xp,
+        "level": player.level,
+        "weapon": player.weapon,
+        "inventory": player.inventory,
+        "kills": player.kills,
+        "rooms_visited": player.rooms_visited,
+        "armor": player.armor,
+        "quest": player.quest,
+        "quest_progress": player.quest_progress,
+        "artifacts": player.artifacts,
+        "companion": player.companion,
+        "mana": player.mana,
+        "max_mana": player.max_mana,
+        "learned_spells": player.learned_spells,
+        "last_stand_used": player.last_stand_used,
+        "prophecies_count": player.prophecies_count
+    }
+    
+    with open(save_file, "w", encoding="utf-8") as f:
+        json.dump(save_data, f, ensure_ascii=False, indent=2)
+    
+    slow_print("  💾 Hra uložena!")
+
+
+def load_game():
+    """Načte uložený stav hry"""
+    import json
+    save_file = "save_game.json"
+    
+    try:
+        with open(save_file, "r", encoding="utf-8") as f:
+            save_data = json.load(f)
+        
+        player = Player(save_data["name"])
+        player.hp = save_data["hp"]
+        player.max_hp = save_data["max_hp"]
+        player.gold = save_data["gold"]
+        player.xp = save_data["xp"]
+        player.level = save_data["level"]
+        player.weapon = save_data["weapon"]
+        player.inventory = save_data["inventory"]
+        player.kills = save_data["kills"]
+        player.rooms_visited = save_data["rooms_visited"]
+        player.armor = save_data["armor"]
+        player.quest = save_data["quest"]
+        player.quest_progress = save_data["quest_progress"]
+        player.artifacts = save_data["artifacts"]
+        player.companion = save_data["companion"]
+        player.mana = save_data["mana"]
+        player.max_mana = save_data["max_mana"]
+        player.learned_spells = save_data["learned_spells"]
+        player.last_stand_used = save_data["last_stand_used"]
+        player.prophecies_count = save_data["prophecies_count"]
+        
+        slow_print("  📂 Hra načtena!")
+        return player
+        
+    except FileNotFoundError:
+        slow_print("  ❌ Žádná uložená hra nebyla nalezena!")
+        return None
+    except Exception as e:
+        slow_print(f"  ❌ Chyba při načítání hry: {e}")
+        return None
+
+
 def show_stats():
     """Zobrazí nejlepší dosažené skóre"""
     import json
@@ -763,15 +838,23 @@ def main():
     
     while True:
         slow_print("\n  [1] Nová hra")
-        slow_print("  [2] Zobrazit statistiky")
-        slow_print("  [3] Konec")
+        slow_print("  [2] Načíst hru")
+        slow_print("  [3] Zobrazit statistiky")
+        slow_print("  [4] Konec")
         menu_choice = input("  > ").strip()
         
         if menu_choice == "1":
             break
         elif menu_choice == "2":
-            show_stats()
+            player = load_game()
+            if player:
+                slow_print(f"\nVítej zpět, {player.name}! Pokračuješ v dungeonu...\n")
+                time.sleep(1)
+                game_loop(player)
+                return
         elif menu_choice == "3":
+            show_stats()
+        elif menu_choice == "4":
             slow_print("\n  Nashledanou!")
             return
     
@@ -780,7 +863,9 @@ def main():
     new_quest(player)
     slow_print(f"\nVítej, {player.name}! Vstupuješ do dungeonů...\n")
     time.sleep(1)
- 
+    game_loop(player)
+    
+def game_loop(player: Player):
     while player.hp > 0:
         room = random.choice(ROOMS)
         player.rooms_visited += 1
@@ -857,9 +942,11 @@ def main():
                 player.gold += gold
                 slow_print(f"\n💰 Našel jsi {gold} zlatých v trávě!")
  
-        cont = input("\nPokračovat dál? (Enter = ano, q = konec): ").strip().lower()
+        cont = input("\nPokračovat dál? (Enter = ano, s = uložit, q = konec): ").strip().lower()
         if cont == "q":
             break
+        elif cont == "s":
+            save_game(player)
  
     slow_print("\n" + "=" * 50)
     survived = player.hp > 0
