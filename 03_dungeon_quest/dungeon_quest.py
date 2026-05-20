@@ -864,7 +864,45 @@ def main():
     slow_print(f"\nVítej, {player.name}! Vstupuješ do dungeonů...\n")
     time.sleep(1)
     game_loop(player)
-    
+
+def dice_gamble(player: Player):
+    slow_print("\n🎲 Narazil jsi na potulného gamblerského trpaslíka!")
+    slow_print("  'Vsaď zlato a hoď kostkou, příteli!' šeptá záhadně.")
+
+    if player.gold < 5:
+        slow_print("  Nemáš dost zlatých ani na vsazení (min. 5).")
+        return
+
+    try:
+        bet = int(input(f"  Kolik zlatých vsadíš? (máš {player.gold}, 0 = odejít): ").strip())
+    except ValueError:
+        slow_print("  Trpaslík se zamračí a odejde.")
+        return
+
+    if bet <= 0:
+        slow_print("  Odmítáš hrát a jdeš dál.")
+        return
+    if bet > player.gold:
+        slow_print("  Tolik zlatých nemáš!")
+        return
+
+    player_roll = random.randint(1, 6)
+    house_roll  = random.randint(1, 6)
+    slow_print(f"\n  Tvoje kostka: 🎲 {player_roll}  |  Trpaslíkova kostka: 🎲 {house_roll}")
+
+    if player_roll > house_roll:
+        winnings = bet * 2
+        player.gold += bet
+        update_quest(player, "gold", bet)
+        slow_print(f"  🏆 Vyhrál jsi! Získáváš {winnings} zlatých!")
+    elif player_roll < house_roll:
+        player.gold -= bet
+        slow_print(f"  💸 Prohrál jsi {bet} zlatých. Trpaslík se chichotá.")
+    else:
+        slow_print("  🤝 Remíza! Nikdo nic nezíská ani neztratí.")
+
+
+
 def game_loop(player: Player):
     while player.hp > 0:
         room = random.choice(ROOMS)
@@ -882,8 +920,12 @@ def game_loop(player: Player):
                     slow_print(f"  ✨ {artifact} tě regeneruje o {player.hp - old_hp} HP!")
         
         player.status()
- 
+        
+        if roll < 0.985:
+            dice_gamble(player)
+        
         roll = random.random()
+       
         
         # Tajný boss se objeví vzácně (1% šance), ale jen pokud je hráč dostatečně silný
         if roll < 0.01 and player.level >= 5:
