@@ -65,3 +65,4 @@ Changelog (Patch Notes):
 - **Verze 1.5** (15. dubna 2026): Přidána správa vybavení pro přepínání zbraní a zbrojí.
 - **Verze 1.6** (18. dubna 2026): Přidán AFK režim s inspirativními citáty a systém statistik s ukládáním a zobrazením top skóre.
 - **Verze: 2.0** (30.dubna 2026): přidán systém společníků
+- **Verze: 2.1** (22. května 2026): oprava nefunkčních řádků
