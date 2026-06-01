@@ -20,7 +20,7 @@ def slow_print(text: str, delay: float = 0.03):
 # ---------------------------------------------------------------------------
 
 ARMORS = {
-    "kožená zbroj": 2,
+    "kožená zbroj": 3,
     "železná zbroj": 4,
     "rytířská zbroj": 6,
 }
